@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const FILE_NAME = "./test-data.txt"
+const FILE_NAME = "./data.txt"
 
 func main() {
 	f, err := os.Open(FILE_NAME)
@@ -19,32 +19,65 @@ func main() {
 
 	defer f.Close()
 
+	fullOverlapCount := 0
 	overlapCount := 0
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
 		segments := strings.Split(line, ",")
 
-		fmt.Print(line)
+		left := segments[0]
+		right := segments[1]
+		leftParsed := strings.Split(left, "-")
+		leftStart, _ := strconv.Atoi(leftParsed[0])
+		leftEnd, _ := strconv.Atoi(leftParsed[1])
 
-		if isOverlap(segments[0], segments[1]) {
-			overlapCount++
-			fmt.Println("   ", "True")
+		rightParsed := strings.Split(right, "-")
+		rightStart, _ := strconv.Atoi(rightParsed[0])
+		rightEnd, _ := strconv.Atoi(rightParsed[1])
+
+		if isFullOverlap(leftStart, leftEnd, rightStart, rightEnd) {
+			fullOverlapCount++
 		}
-		fmt.Println()
+
+		if isOverlap(leftStart, leftEnd, rightStart, rightEnd) {
+			overlapCount++
+		}
 	}
 
-	fmt.Println("Sum of overlaps is: ", overlapCount)
+	fmt.Println("Sum of full overlaps is: ", fullOverlapCount)
+	fmt.Println("Sum of partial overlaps is: ", overlapCount)
 }
 
-func isOverlap(left string, right string) bool {
-	leftParsed := strings.Split(left, "-")
-	leftStart, _ := strconv.Atoi(leftParsed[0])
-	leftEnd, _ := strconv.Atoi(leftParsed[1])
+func isOverlap(leftStart int, leftEnd int, rightStart int, rightEnd int) bool {
+	if leftStart == rightStart {
+		return true
+	}
 
-	rightParsed := strings.Split(right, "-")
-	rightStart, _ := strconv.Atoi(rightParsed[0])
-	rightEnd, _ := strconv.Atoi(rightParsed[1])
+	if leftStart < rightStart {
+		return rightStart <= leftEnd
+	}
+
+	if leftStart > rightStart {
+		return rightEnd >= leftStart
+	}
+
+	return false
+}
+
+func isFullOverlap(leftStart int, leftEnd int, rightStart int, rightEnd int) bool {
+
+	if leftStart == rightStart {
+		return true
+	}
+
+	if leftStart < rightStart {
+		return leftEnd >= rightEnd
+	}
+
+	if leftStart > rightStart {
+		return leftEnd <= rightEnd
+	}
 
 	return false
 }
