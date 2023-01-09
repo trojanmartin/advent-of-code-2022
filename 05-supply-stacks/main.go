@@ -9,18 +9,33 @@ import (
 	"strings"
 )
 
-const FILE_NAME = "./test-data.txt"
+const FILE_NAME = "./data.txt"
 
 type Port struct {
 	stacks map[int]*Stack
 }
 
 func (p *Port) move(sourceKey int, destKey int, count int) {
-	source, _ := p.stacks[sourceKey]
-	dest, _ := p.stacks[destKey]
+	source := p.stacks[sourceKey]
+	dest := p.stacks[destKey]
 
 	for i := 0; i < count; i++ {
-		dest.Push(source.Pop())
+		dest.Push(*source.Pop())
+	}
+}
+
+func (p *Port) movePart2(sourceKey int, destKey int, count int) {
+	source := p.stacks[sourceKey]
+	dest := p.stacks[destKey]
+
+	toMove := []ItemType{}
+
+	for i := 0; i < count; i++ {
+		toMove = append(toMove, *source.Pop())
+	}
+
+	for i := count - 1; i >= 0; i-- {
+		dest.Push(toMove[i])
 	}
 }
 
@@ -37,7 +52,17 @@ func main() {
 
 	fmt.Println(port)
 	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		count, _ := strconv.Atoi(fields[1])
+		from, _ := strconv.Atoi(fields[3])
+		to, _ := strconv.Atoi(fields[5])
 
+		port.movePart2(from, to, count)
+	}
+
+	for i := 1; i <= 9; i++ {
+		stack := port.stacks[i]
+		fmt.Print(*stack.Pop())
 	}
 }
 
@@ -71,15 +96,23 @@ func createPort(scanner *bufio.Scanner) *Port {
 	currentLine := len(portTextLines) - 2
 	for currentLine >= 0 {
 		line := portTextLines[currentLine]
-		supplies := strings.SplitN(line, " ", stackCount)
 
-		for i, supply := range supplies {
-			supply = strings.TrimSpace(supply)
-			if len(supply) <= 0 {
-				continue
+		i := 0
+		stackIndex := 1
+		for stackIndex <= stackCount {
+			end := i + 4
+			if end > len(line) {
+				end = len(line)
 			}
-			stack := port.stacks[i+1]
-			stack.Push(supply)
+			supply := line[i:end]
+
+			supply = strings.TrimSpace(supply)
+			if len(supply) > 0 {
+				stack := port.stacks[stackIndex]
+				stack.Push(supply)
+			}
+			stackIndex++
+			i += 4
 		}
 
 		currentLine--
